@@ -11,7 +11,7 @@ export default defineConfig({
     setupFiles: ["./src/tests/setup.ts"],
     include: ["tests/unit/**/*.test.{ts,tsx}", "tests/integration/**/*.test.ts"],
     env: {
-      DATABASE_URL: ":memory:",
+      TURSO_DATABASE_URL: ":memory:",
       AUTH_SECRET: "secreto-de-pruebas-con-mas-de-32-caracteres",
       REVALIDATION_SECRET: "revalidacion-de-pruebas",
     },

@@ -57,12 +57,12 @@ import { FESTIVAL } from "@/shared/config/constants";
  * los tests pueden sustituir cualquier adaptador por un fake en memoria.
  */
 export function crearContenedor(conexion: Conexion) {
-  const { db, sqlite } = conexion;
+  const { db, client } = conexion;
 
   const eventosRepo = new DrizzleEventoRepository(db);
   const artistasRepo = new DrizzleArtistaRepository(db, eventosRepo);
   const comparsasRepo = new DrizzleComparsaRepository(db);
-  const boleteriaRepo = new DrizzleBoleteriaRepository(db, sqlite);
+  const boleteriaRepo = new DrizzleBoleteriaRepository(db, client);
   const resultadosRepo = new DrizzleResultadoRepository(db);
   const agendaRepo = new DrizzleAgendaRepository(db);
   const usuariosRepo = new DrizzleUsuarioRepository(db);

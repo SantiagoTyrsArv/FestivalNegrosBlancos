@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import type { DatabaseSync } from "node:sqlite";
+import type { Client } from "@libsql/client";
 import { asc, desc, eq } from "drizzle-orm";
 import type { Db } from "@/db/connection";
 import { boletas, sesionesBoleteria } from "@/db/schema";
@@ -39,7 +39,7 @@ const aBoleta = (f: FilaBoleta): Boleta => ({
   creadaEn: new Date(f.creadoEn),
 });
 
-/** Fila cruda devuelta por node:sqlite (columnas en snake_case). */
+/** Fila cruda devuelta por libSQL (columnas en snake_case). */
 interface FilaBoletaSql {
   id: number;
   codigo: string;
@@ -52,19 +52,19 @@ interface FilaBoletaSql {
 }
 
 const boletaDesdeSql = (f: FilaBoletaSql): Boleta => ({
-  id: f.id,
+  id: Number(f.id),
   codigo: f.codigo,
-  sesionId: f.sesion_id,
-  usuarioId: f.usuario_id,
-  cantidad: f.cantidad,
-  total: { centavos: f.total_centavos, moneda: f.moneda },
+  sesionId: Number(f.sesion_id),
+  usuarioId: Number(f.usuario_id),
+  cantidad: Number(f.cantidad),
+  total: { centavos: Number(f.total_centavos), moneda: f.moneda },
   creadaEn: new Date(f.creado_en),
 });
 
 export class DrizzleBoleteriaRepository implements BoleteriaRepository {
   constructor(
     private readonly db: Db,
-    private readonly sqlite: DatabaseSync
+    private readonly client: Client
   ) {}
 
   async sesionesDeEvento(eventoId: number): Promise<SesionBoleteria[]> {
@@ -95,75 +95,73 @@ export class DrizzleBoleteriaRepository implements BoleteriaRepository {
   }
 
   /**
-   * Compra atómica. Se ejecuta de forma SÍNCRONA sobre el manejador nativo:
-   * entre BEGIN y COMMIT no hay ningún `await`, así que ninguna otra petición
-   * del mismo proceso puede intercalarse. `BEGIN IMMEDIATE` toma el lock de
-   * escritura desde el inicio (protege frente a otros procesos) y el UPDATE
-   * condicional `cupo_vendido + n <= cupo_total` hace imposible la sobreventa
-   * aunque dos compras lean el mismo cupo. La restricción CHECK de la tabla es
-   * una tercera barrera.
+   * Compra atómica en UN solo batch de escritura de libSQL: Turso lo ejecuta
+   * como una única transacción (todo o nada) en un solo viaje de red, sin
+   * mantener locks mientras viajan datos entre cliente y servidor.
+   *
+   * 1. INSERT … SELECT condicional: solo inserta si la clave de idempotencia
+   *    es nueva y si `cupo_vendido + n <= cupo_total` en ese mismo instante.
+   * 2. UPDATE que descuenta el cupo solo si el INSERT anterior insertó una
+   *    fila (`changes() = 1`, contador de la sentencia previa del batch).
+   * 3-4. Lecturas para interpretar el resultado dentro de la misma transacción.
+   *
+   * Dos compras concurrentes se serializan y la segunda ve el cupo ya
+   * descontado, así que la sobreventa es imposible; el CHECK de la tabla y el
+   * índice único (usuario, idempotency_key) son barreras adicionales.
    */
   async registrarCompra(s: SolicitudCompra): Promise<Result<CompraRegistrada, ErrorCompra>> {
-    const db = this.sqlite;
-    db.exec("BEGIN IMMEDIATE");
-    try {
-      const previa = db
-        .prepare("SELECT * FROM boletas WHERE usuario_id = ? AND idempotency_key = ?")
-        .get(s.usuarioId, s.idempotencyKey) as FilaBoletaSql | undefined;
-      if (previa) {
-        db.exec("COMMIT");
-        return ok({ boleta: boletaDesdeSql(previa), repetida: true });
-      }
+    const [insercion, , boleta, sesion] = await this.client.batch(
+      [
+        {
+          sql: `INSERT INTO boletas (codigo, sesion_id, usuario_id, cantidad, total_centavos, moneda, idempotency_key)
+                SELECT ?, id, ?, ?, precio_centavos * ?, moneda, ?
+                FROM sesiones_boleteria
+                WHERE id = ? AND cupo_vendido + ? <= cupo_total
+                  AND NOT EXISTS (SELECT 1 FROM boletas WHERE usuario_id = ? AND idempotency_key = ?)`,
+          args: [
+            s.codigo,
+            s.usuarioId,
+            s.cantidad,
+            s.cantidad,
+            s.idempotencyKey,
+            s.sesionId,
+            s.cantidad,
+            s.usuarioId,
+            s.idempotencyKey,
+          ],
+        },
+        {
+          sql: "UPDATE sesiones_boleteria SET cupo_vendido = cupo_vendido + ? WHERE id = ? AND changes() = 1",
+          args: [s.cantidad, s.sesionId],
+        },
+        {
+          sql: "SELECT * FROM boletas WHERE usuario_id = ? AND idempotency_key = ?",
+          args: [s.usuarioId, s.idempotencyKey],
+        },
+        {
+          sql: "SELECT cupo_total, cupo_vendido FROM sesiones_boleteria WHERE id = ?",
+          args: [s.sesionId],
+        },
+      ],
+      "write"
+    );
 
-      const descuento = db
-        .prepare(
-          `UPDATE sesiones_boleteria SET cupo_vendido = cupo_vendido + ?
-           WHERE id = ? AND cupo_vendido + ? <= cupo_total`
-        )
-        .run(s.cantidad, s.sesionId, s.cantidad);
-
-      const sesion = db
-        .prepare(
-          "SELECT cupo_total, cupo_vendido, precio_centavos, moneda FROM sesiones_boleteria WHERE id = ?"
-        )
-        .get(s.sesionId) as
-        | { cupo_total: number; cupo_vendido: number; precio_centavos: number; moneda: string }
-        | undefined;
-
-      if (Number(descuento.changes) === 0) {
-        db.exec("ROLLBACK");
-        if (!sesion) return err({ tipo: "SESION_NO_ENCONTRADA" });
-        return err({
-          tipo: "CUPO_INSUFICIENTE",
-          disponible: cupoDisponible({
-            cupoTotal: sesion.cupo_total,
-            cupoVendido: sesion.cupo_vendido,
-          }),
-        });
-      }
-      if (!sesion) throw new Error("Sesión desaparecida dentro de la transacción");
-
-      const insertada = db
-        .prepare(
-          `INSERT INTO boletas (codigo, sesion_id, usuario_id, cantidad, total_centavos, moneda, idempotency_key)
-           VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *`
-        )
-        .get(
-          s.codigo,
-          s.sesionId,
-          s.usuarioId,
-          s.cantidad,
-          sesion.precio_centavos * s.cantidad,
-          sesion.moneda,
-          s.idempotencyKey
-        ) as unknown as FilaBoletaSql;
-
-      db.exec("COMMIT");
-      return ok({ boleta: boletaDesdeSql(insertada), repetida: false });
-    } catch (error) {
-      if (db.isTransaction) db.exec("ROLLBACK");
-      throw error;
+    const filaBoleta = boleta?.rows[0] as unknown as FilaBoletaSql | undefined;
+    if (insercion?.rowsAffected === 1 && filaBoleta) {
+      return ok({ boleta: boletaDesdeSql(filaBoleta), repetida: false });
     }
+    if (filaBoleta) return ok({ boleta: boletaDesdeSql(filaBoleta), repetida: true });
+
+    const filaSesion = sesion?.rows[0] as unknown as
+      { cupo_total: number; cupo_vendido: number } | undefined;
+    if (!filaSesion) return err({ tipo: "SESION_NO_ENCONTRADA" });
+    return err({
+      tipo: "CUPO_INSUFICIENTE",
+      disponible: cupoDisponible({
+        cupoTotal: Number(filaSesion.cupo_total),
+        cupoVendido: Number(filaSesion.cupo_vendido),
+      }),
+    });
   }
 }
 

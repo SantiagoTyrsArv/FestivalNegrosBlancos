@@ -4,13 +4,10 @@
  * Es idempotente: vacía las tablas y vuelve a poblarlas.
  */
 import bcrypt from "bcryptjs";
-import { config } from "dotenv";
+import { configDesdeEntorno, describirUrl } from "./config-scripts";
 import { abrirConexion } from "./connection";
 import * as s from "./schema";
 import { toSlug } from "../shared/lib/formato";
-
-config({ path: ".env.local" });
-config();
 
 /** Hora local del festival (UTC-5, sin horario de verano) → ISO UTC. */
 function local(dia: string, hora: string): string {
@@ -449,9 +446,9 @@ const EVENTOS: EventoSeed[] = [
 ];
 
 async function main() {
-  const url = process.env["DATABASE_URL"] ?? "./sqlite.db";
-  const { db, sqlite } = abrirConexion(url);
-  console.log(`Poblando ${url} con datos de demostración...`);
+  const config = configDesdeEntorno();
+  const { db, client } = abrirConexion(config);
+  console.log(`Poblando ${describirUrl(config.url)} con datos de demostración...`);
 
   // Orden inverso a las dependencias de claves foráneas.
   for (const tabla of [
@@ -564,16 +561,14 @@ async function main() {
         await db.insert(s.eventoArtistas).values({ eventoId: evento.id, artistaId: artista.id });
     }
     for (const [nombre, cupoTotal, cupoVendido, precio] of e.sesiones) {
-      await db
-        .insert(s.sesionesBoleteria)
-        .values({
-          eventoId: evento.id,
-          nombre,
-          cupoTotal,
-          cupoVendido,
-          precioCentavos: precio * 100,
-          moneda: "COP",
-        });
+      await db.insert(s.sesionesBoleteria).values({
+        eventoId: evento.id,
+        nombre,
+        cupoTotal,
+        cupoVendido,
+        precioCentavos: precio * 100,
+        moneda: "COP",
+      });
       totalSesiones++;
     }
   }
@@ -609,7 +604,7 @@ async function main() {
 
   await db.insert(s.ajustes).values({ clave: "modo_caos", valor: "ninguno" });
 
-  sqlite.close();
+  client.close();
   console.log(
     `Listo: ${EVENTOS.length} eventos, ${artistas.length} artistas, ${comparsas.length} comparsas, ` +
       `${escenarios.length} escenarios, ${totalSesiones} sesiones de boletería.`

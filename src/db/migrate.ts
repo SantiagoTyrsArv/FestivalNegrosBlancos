@@ -1,15 +1,12 @@
-import { config } from "dotenv";
+import { configDesdeEntorno, describirUrl } from "./config-scripts";
 import { abrirConexion, aplicarMigraciones } from "./connection";
 
-config({ path: ".env.local" });
-config();
-
 async function main() {
-  const url = process.env["DATABASE_URL"] ?? "./sqlite.db";
-  console.log(`Aplicando migraciones en ${url}...`);
-  const conexion = abrirConexion(url);
+  const config = configDesdeEntorno();
+  console.log(`Aplicando migraciones en ${describirUrl(config.url)}...`);
+  const conexion = abrirConexion(config);
   await aplicarMigraciones(conexion);
-  conexion.sqlite.close();
+  conexion.client.close();
   console.log("Migraciones aplicadas.");
 }
 

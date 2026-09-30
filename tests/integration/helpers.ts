@@ -3,29 +3,25 @@ import * as s from "@/db/schema";
 
 /** BD SQLite en memoria con el esquema real (migraciones) y un conjunto mínimo de datos. */
 export async function crearBdPrueba(): Promise<Conexion> {
-  const conexion = abrirConexion(":memory:");
+  const conexion = abrirConexion({ url: ":memory:" });
   await aplicarMigraciones(conexion);
   const { db } = conexion;
 
-  await db
-    .insert(s.ediciones)
-    .values({
-      id: 1,
-      anio: 2027,
-      nombre: "Test",
-      fechaInicio: "2027-01-02",
-      fechaFin: "2027-01-06",
-    });
-  await db
-    .insert(s.escenarios)
-    .values({
-      id: 1,
-      slug: "tarima",
-      nombre: "Tarima",
-      descripcion: "d",
-      capacidad: 100,
-      ubicacion: "u",
-    });
+  await db.insert(s.ediciones).values({
+    id: 1,
+    anio: 2027,
+    nombre: "Test",
+    fechaInicio: "2027-01-02",
+    fechaFin: "2027-01-06",
+  });
+  await db.insert(s.escenarios).values({
+    id: 1,
+    slug: "tarima",
+    nombre: "Tarima",
+    descripcion: "d",
+    capacidad: 100,
+    ubicacion: "u",
+  });
   await db.insert(s.artistas).values([
     {
       id: 1,
@@ -105,19 +101,17 @@ export async function crearBdPrueba(): Promise<Conexion> {
     { id: 1, email: "a@test.com", nombre: "A", passwordHash: "x" },
     { id: 2, email: "b@test.com", nombre: "B", passwordHash: "x" },
   ]);
-  await db
-    .insert(s.comparsas)
-    .values({
-      id: 1,
-      slug: "maravilla",
-      nombre: "Maravilla",
-      fundacion: 1985,
-      director: "D",
-      integrantes: 10,
-      descripcion: "d",
-      motivo: "m",
-      color: "#c8102e",
-    });
+  await db.insert(s.comparsas).values({
+    id: 1,
+    slug: "maravilla",
+    nombre: "Maravilla",
+    fundacion: 1985,
+    director: "D",
+    integrantes: 10,
+    descripcion: "d",
+    motivo: "m",
+    color: "#c8102e",
+  });
   await db.insert(s.resultados).values([
     {
       edicionId: 1,

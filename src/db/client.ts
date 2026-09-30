@@ -7,10 +7,14 @@ declare global {
 }
 
 /**
- * Conexión única por proceso. Se guarda en `globalThis` para sobrevivir a los
- * recargas en caliente de `next dev` sin abrir un manejador nuevo en cada una.
+ * Cliente único por proceso hacia Turso. Se guarda en `globalThis` para
+ * sobrevivir a las recargas en caliente de `next dev` sin abrir conexiones nuevas.
  */
 export function getConexion(): Conexion {
-  globalThis.__cbnConexion ??= abrirConexion(getServerEnv().DATABASE_URL);
+  const env = getServerEnv();
+  globalThis.__cbnConexion ??= abrirConexion({
+    url: env.TURSO_DATABASE_URL,
+    authToken: env.TURSO_AUTH_TOKEN,
+  });
   return globalThis.__cbnConexion;
 }

@@ -86,7 +86,7 @@ describe("DrizzleBoleteriaRepository: compra atómica", () => {
     });
 
   it("registra la boleta y descuenta el cupo en la misma transacción", async () => {
-    const repo = new DrizzleBoleteriaRepository(conexion.db, conexion.sqlite);
+    const repo = new DrizzleBoleteriaRepository(conexion.db, conexion.client);
     const r = await compra(repo, 1, 3, "k1");
     expect(r.ok && r.value.boleta).toMatchObject({
       cantidad: 3,
@@ -99,7 +99,7 @@ describe("DrizzleBoleteriaRepository: compra atómica", () => {
   });
 
   it("es imposible sobrevender: 40 compras concurrentes sobre 10 cupos", async () => {
-    const repo = new DrizzleBoleteriaRepository(conexion.db, conexion.sqlite);
+    const repo = new DrizzleBoleteriaRepository(conexion.db, conexion.client);
     const resultados = await Promise.all(
       Array.from({ length: 40 }, (_, i) => compra(repo, (i % 2) + 1, 1, `concurrente-${i}`))
     );
@@ -115,7 +115,7 @@ describe("DrizzleBoleteriaRepository: compra atómica", () => {
   });
 
   it("rechaza en el repositorio aunque la validación previa se salte (carrera)", async () => {
-    const repo = new DrizzleBoleteriaRepository(conexion.db, conexion.sqlite);
+    const repo = new DrizzleBoleteriaRepository(conexion.db, conexion.client);
     const r = await repo.registrarCompra({
       sesionId: 2,
       usuarioId: 1,
@@ -135,7 +135,7 @@ describe("DrizzleBoleteriaRepository: compra atómica", () => {
   });
 
   it("la clave de idempotencia devuelve la compra original sin descontar dos veces", async () => {
-    const repo = new DrizzleBoleteriaRepository(conexion.db, conexion.sqlite);
+    const repo = new DrizzleBoleteriaRepository(conexion.db, conexion.client);
     const primera = await compra(repo, 1, 2, "reintento");
     const segunda = await compra(repo, 1, 2, "reintento");
     expect(segunda.ok && segunda.value.repetida).toBe(true);

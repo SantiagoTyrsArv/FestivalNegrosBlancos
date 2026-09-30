@@ -3,7 +3,7 @@ import type { z } from "zod";
 
 /**
  * Respuestas de error uniformes según RFC 9457 (application/problem+json).
- * `type` apunta a la documentación del error en docs/openapi.yaml.
+ * Los códigos de `type` están documentados en docs/api.md.
  */
 export interface Problema {
   type: string;

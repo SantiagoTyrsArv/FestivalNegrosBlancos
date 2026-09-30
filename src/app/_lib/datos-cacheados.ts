@@ -10,7 +10,7 @@ import { CACHE_TAGS, REVALIDACION } from "@/shared/config/constants";
  * Regla clave de resiliencia: si la upstream falla, se LANZA un error en vez
  * de devolverlo. Así el fallo nunca queda cacheado y, durante una
  * regeneración ISR en segundo plano, Next conserva y sigue sirviendo la última
- * versión buena de la página (stale-while-revalidate). Ver ADR 0006.
+ * versión buena de la página (stale-while-revalidate). Ver docs/adr/0006-resiliencia-ante-fallos.md.
  */
 export class UpstreamNoDisponibleError extends Error {
   constructor(public readonly motivo: string) {

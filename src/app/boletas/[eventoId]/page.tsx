@@ -19,7 +19,7 @@ import { Skeleton } from "@/shared/ui/components/Skeleton";
  * HÍBRIDO (streaming): el "shell" del evento se obtiene del Data Cache
  * (unstable_cache con tag "programacion") y se envía de inmediato; el cupo en
  * tiempo real se calcula en esta petición y llega después por streaming dentro
- * de <Suspense>. Ver ADR 0004 sobre por qué no usamos cacheComponents/PPR.
+ * de <Suspense>. Ver docs/adr/0004-sin-cache-components.md sobre por qué no usamos cacheComponents/PPR.
  */
 export const dynamic = "force-dynamic";
 

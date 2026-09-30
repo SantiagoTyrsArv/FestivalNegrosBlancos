@@ -68,9 +68,12 @@ export async function requerirAdmin(destino: string): Promise<DatosSesion> {
   return sesion;
 }
 
-/** Solo acepta rutas internas como destino tras el login. */
+/** Solo acepta rutas internas como destino tras el login ("//x" o "/\x" irían a otro dominio). */
 export function destinoSeguro(valor: unknown, porDefecto = "/"): string {
-  return typeof valor === "string" && valor.startsWith("/") && !valor.startsWith("//")
+  return typeof valor === "string" &&
+    valor.startsWith("/") &&
+    !valor.startsWith("//") &&
+    !valor.includes("\\")
     ? valor
     : porDefecto;
 }

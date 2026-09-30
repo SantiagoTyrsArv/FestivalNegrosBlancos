@@ -1,13 +1,16 @@
 /**
  * Datos de demostración "quemados" en el código. TODOS son ficticios
  * (artistas, comparsas, personas, precios) y existen solo para ilustrar los
- * patrones de rendering. Se cargan en la BD libSQL en memoria al arrancar
- * cada proceso (ver client.ts) y también desde el script `pnpm db:seed`.
+ * patrones de rendering. No hay base de datos: los repositorios en memoria
+ * (infrastructure/*-en-memoria.ts) parten de una copia de este catálogo.
  */
-import bcrypt from "bcryptjs";
-import type { Db } from "./connection";
-import * as s from "./schema";
-import { toSlug } from "../shared/lib/formato";
+import type { SesionBoleteria } from "@/modules/boleteria/domain/boleteria";
+import type { Comparsa } from "@/modules/comparsas/domain/comparsa";
+import type { Artista } from "@/modules/eventos/domain/artista";
+import type { Evento, TipoEvento } from "@/modules/eventos/domain/evento";
+import type { Resultado } from "@/modules/resultados/domain/resultado";
+import type { UsuarioConCredenciales } from "@/modules/usuarios/domain/usuario";
+import { toSlug } from "@/shared/lib/formato";
 
 /** Hora local del festival (UTC-5, sin horario de verano) → ISO UTC. */
 function local(dia: string, hora: string): string {
@@ -214,10 +217,9 @@ const COMPARSAS = [
   ],
 ] as const;
 
-type Tipo = (typeof s.eventos.$inferInsert)["tipo"];
 interface EventoSeed {
   nombre: string;
-  tipo: Tipo;
+  tipo: TipoEvento;
   descripcion: string;
   dia: string;
   inicio: string;
@@ -445,175 +447,110 @@ const EVENTOS: EventoSeed[] = [
   },
 ];
 
-export interface ResumenSemilla {
-  eventos: number;
-  artistas: number;
-  comparsas: number;
-  escenarios: number;
-  sesiones: number;
+const ESCENARIOS = [
+  { slug: "tarima-mayor", nombre: "Tarima Mayor" },
+  { slug: "tarima-del-valle", nombre: "Tarima del Valle" },
+  { slug: "casa-del-carnaval", nombre: "Casa del Carnaval" },
+] as const;
+
+/** Contenido inicial de todos los repositorios en memoria. */
+export interface Catalogo {
+  artistas: Artista[];
+  comparsas: Comparsa[];
+  eventos: Evento[];
+  sesiones: SesionBoleteria[];
+  resultados: Resultado[];
+  usuarios: UsuarioConCredenciales[];
 }
 
-/** Vacía las tablas y las vuelve a poblar (idempotente). */
-export async function poblarDatosDemo(db: Db): Promise<ResumenSemilla> {
-  // Orden inverso a las dependencias de claves foráneas.
-  for (const tabla of [
-    s.medicionesRender,
-    s.ajustes,
-    s.agendaItems,
-    s.boletas,
-    s.resultados,
-    s.sesionesBoleteria,
-    s.eventoArtistas,
-    s.eventos,
-    s.comparsas,
-    s.artistas,
-    s.escenarios,
-    s.usuarios,
-    s.ediciones,
-  ]) {
-    await db.delete(tabla);
-  }
+/**
+ * Construye un catálogo NUEVO en cada llamada: quien lo reciba puede mutarlo
+ * (compras, agenda, admin) sin afectar a otros consumidores ni a los tests.
+ */
+export function crearCatalogo(ahora = new Date()): Catalogo {
+  const artistas: Artista[] = ARTISTAS.map(([nombre, genero, origen, destacado, biografia], i) => ({
+    id: i + 1,
+    slug: toSlug(nombre),
+    nombre,
+    genero,
+    origen,
+    destacado,
+    biografia,
+  }));
 
-  const [edicion] = await db
-    .insert(s.ediciones)
-    .values({
-      anio: 2027,
-      nombre: "Carnaval de Blancos y Negros 2027",
-      fechaInicio: D1,
-      fechaFin: D5,
+  const comparsas: Comparsa[] = COMPARSAS.map(
+    ([nombre, fundacion, director, integrantes, descripcion, motivo, color], i) => ({
+      id: i + 1,
+      slug: toSlug(nombre),
+      nombre,
+      fundacion,
+      director,
+      integrantes,
+      descripcion,
+      motivo,
+      color,
     })
-    .returning();
-  if (!edicion) throw new Error("No se creó la edición");
+  );
 
-  const escenarios = await db
-    .insert(s.escenarios)
-    .values([
-      {
-        slug: "tarima-mayor",
-        nombre: "Tarima Mayor",
-        descripcion: "Escenario principal frente a la plaza central.",
-        capacidad: 3200,
-        ubicacion: "Plaza central",
-      },
-      {
-        slug: "tarima-del-valle",
-        nombre: "Tarima del Valle",
-        descripcion: "Escenario mediano para conciertos y danzas.",
-        capacidad: 1800,
-        ubicacion: "Avenida de los Estudiantes",
-      },
-      {
-        slug: "casa-del-carnaval",
-        nombre: "Casa del Carnaval",
-        descripcion: "Espacio cubierto para talleres y ceremonias.",
-        capacidad: 500,
-        ubicacion: "Centro histórico",
-      },
-    ])
-    .returning();
-
-  const artistas = await db
-    .insert(s.artistas)
-    .values(
-      ARTISTAS.map(([nombre, genero, origen, destacado, biografia]) => ({
-        slug: toSlug(nombre),
-        nombre,
-        genero,
-        origen,
-        destacado,
-        biografia,
-      }))
-    )
-    .returning();
-
-  const comparsas = await db
-    .insert(s.comparsas)
-    .values(
-      COMPARSAS.map(([nombre, fundacion, director, integrantes, descripcion, motivo, color]) => ({
-        slug: toSlug(nombre),
-        nombre,
-        fundacion,
-        director,
-        integrantes,
-        descripcion,
-        motivo,
-        color,
-      }))
-    )
-    .returning();
-
-  let totalSesiones = 0;
-  for (const e of EVENTOS) {
-    const escenario = escenarios[e.escenario];
-    if (!escenario) throw new Error(`Escenario ${e.escenario} inexistente`);
-    const [evento] = await db
-      .insert(s.eventos)
-      .values({
-        edicionId: edicion.id,
-        escenarioId: escenario.id,
-        nombre: e.nombre,
-        tipo: e.tipo,
-        descripcion: e.descripcion,
-        inicio: local(e.dia, e.inicio),
-        fin: local(e.dia, e.fin),
-      })
-      .returning();
-    if (!evento) throw new Error(`No se creó el evento ${e.nombre}`);
-
-    for (const indice of e.artistas ?? []) {
-      const artista = artistas[indice];
-      if (artista)
-        await db.insert(s.eventoArtistas).values({ eventoId: evento.id, artistaId: artista.id });
-    }
+  const eventos: Evento[] = [];
+  const sesiones: SesionBoleteria[] = [];
+  EVENTOS.forEach((e, i) => {
+    const id = i + 1;
+    eventos.push({
+      id,
+      nombre: e.nombre,
+      tipo: e.tipo,
+      descripcion: e.descripcion,
+      inicio: new Date(local(e.dia, e.inicio)),
+      fin: new Date(local(e.dia, e.fin)),
+      cancelado: false,
+      escenario: ESCENARIOS[e.escenario],
+      artistas: (e.artistas ?? [])
+        .map((indice) => artistas[indice])
+        .filter((a): a is Artista => a !== undefined)
+        .map(({ slug, nombre }) => ({ slug, nombre }))
+        .sort((a, b) => a.nombre.localeCompare(b.nombre, "es")),
+    });
     for (const [nombre, cupoTotal, cupoVendido, precio] of e.sesiones) {
-      await db.insert(s.sesionesBoleteria).values({
-        eventoId: evento.id,
+      sesiones.push({
+        id: sesiones.length + 1,
+        eventoId: id,
         nombre,
         cupoTotal,
         cupoVendido,
-        precioCentavos: precio * 100,
-        moneda: "COP",
+        precio: { centavos: precio * 100, moneda: "COP" },
       });
-      totalSesiones++;
     }
-  }
+  });
 
   const categorias = ["Comparsas", "Colectivos coreográficos"] as const;
-  await db.insert(s.resultados).values(
-    comparsas.slice(0, 10).map((c, i) => ({
-      edicionId: edicion.id,
-      comparsaId: c.id,
-      categoria: categorias[i < 5 ? 0 : 1],
-      puntajeCentesimas: 9550 - i * 137,
-      // Los 6 primeros ya están publicados; el resto queda pendiente para
-      // publicarlo desde /admin y demostrar la revalidación on-demand.
-      publicado: i < 6,
-      publicadoEn: i < 6 ? new Date().toISOString() : null,
-    }))
-  );
+  const resultados: Resultado[] = comparsas.slice(0, 10).map((c, i) => ({
+    id: i + 1,
+    comparsa: { slug: c.slug, nombre: c.nombre, color: c.color },
+    categoria: categorias[i < 5 ? 0 : 1],
+    puntajeCentesimas: 9550 - i * 137,
+    // Los 6 primeros ya están publicados; el resto queda pendiente para
+    // publicarlo desde /admin y demostrar la revalidación on-demand.
+    publicado: i < 6,
+    publicadoEn: i < 6 ? ahora : null,
+  }));
 
-  await db.insert(s.usuarios).values([
+  const usuarios: UsuarioConCredenciales[] = [
     {
+      id: 1,
       email: "admin@carnaval.test",
       nombre: "Admin del Carnaval",
-      passwordHash: await bcrypt.hash("Admin123!", 10),
+      password: "Admin123!",
       rol: "admin",
     },
     {
+      id: 2,
       email: "asistente@carnaval.test",
       nombre: "Ana Asistente",
-      passwordHash: await bcrypt.hash("Asistente123!", 10),
+      password: "Asistente123!",
       rol: "asistente",
     },
-  ]);
+  ];
 
-  await db.insert(s.ajustes).values({ clave: "modo_caos", valor: "ninguno" });
-
-  return {
-    eventos: EVENTOS.length,
-    artistas: artistas.length,
-    comparsas: comparsas.length,
-    escenarios: escenarios.length,
-    sesiones: totalSesiones,
-  };
+  return { artistas, comparsas, eventos, sesiones, resultados, usuarios };
 }

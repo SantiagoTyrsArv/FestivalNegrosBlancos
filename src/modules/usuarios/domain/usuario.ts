@@ -10,8 +10,9 @@ export interface Usuario {
   readonly rol: Rol;
 }
 
+/** Proyecto de demostración: las contraseñas de los usuarios quemados se guardan tal cual. */
 export interface UsuarioConCredenciales extends Usuario {
-  readonly passwordHash: string;
+  readonly password: string;
 }
 
 export function normalizarEmail(email: string): string {
@@ -36,10 +37,5 @@ export interface UsuarioRepository {
   buscarPorEmail(email: string): Promise<UsuarioConCredenciales | null>;
   obtenerPorId(id: number): Promise<Usuario | null>;
   /** Devuelve null si el email ya está registrado. */
-  crear(datos: { email: string; nombre: string; passwordHash: string }): Promise<Usuario | null>;
-}
-
-export interface ServicioHash {
-  hash(password: string): Promise<string>;
-  verificar(password: string, hash: string): Promise<boolean>;
+  crear(datos: { email: string; nombre: string; password: string }): Promise<Usuario | null>;
 }

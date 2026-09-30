@@ -74,7 +74,7 @@ describe("casos de uso de boletería", () => {
       repetida: false,
       boleta: { cantidad: 2, totalCentavos: 9_000_000 },
     });
-    expect(repo.sesiones[0]?.cupoVendido).toBe(2);
+    expect((await repo.obtenerSesion(1))?.cupoVendido).toBe(2);
     expect(await new ListarBoletasDeUsuario(repo).ejecutar(9)).toHaveLength(1);
   });
 
@@ -85,7 +85,7 @@ describe("casos de uso de boletería", () => {
     await caso.ejecutar(entrada);
     const segunda = await caso.ejecutar(entrada);
     expect(segunda.ok && segunda.value.repetida).toBe(true);
-    expect(repo.sesiones[0]?.cupoVendido).toBe(2);
+    expect((await repo.obtenerSesion(1))?.cupoVendido).toBe(2);
   });
 
   it("devuelve errores tipados de sesión inexistente y cupo insuficiente", async () => {
@@ -108,6 +108,6 @@ describe("casos de uso de boletería", () => {
       caso.ejecutar({ sesionId: 1, usuarioId: 2, cantidad: 2, idempotencyKey: "b" }),
     ]);
     expect([a?.ok, b?.ok].filter(Boolean)).toHaveLength(1);
-    expect(repo.sesiones[0]?.cupoVendido).toBe(2);
+    expect((await repo.obtenerSesion(1))?.cupoVendido).toBe(2);
   });
 });

@@ -44,17 +44,6 @@ export const noAutenticado = () => problema(401, "no-autenticado", "Se requiere 
 export const prohibido = () => problema(403, "prohibido", "No tienes permiso para esta acción");
 export const noEncontrado = (detalle?: string) =>
   problema(404, "no-encontrado", "Recurso no encontrado", detalle);
-export const demasiadasPeticiones = (reintentarEnSeg: number) =>
-  problema(
-    429,
-    "demasiadas-peticiones",
-    "Demasiadas peticiones",
-    "Espera antes de reintentar.",
-    {},
-    {
-      "Retry-After": String(reintentarEnSeg),
-    }
-  );
 
 export type LecturaCuerpo<T> = { ok: true; datos: T } | { ok: false; respuesta: Response };
 

@@ -29,7 +29,7 @@ type PayloadUpstream = z.infer<typeof payloadUpstream>;
 
 /**
  * SIMULACIÓN de una API upstream de programación. Como no hay un servicio
- * externo real, la "respuesta" se construye a partir de la BD local y se
+ * externo real, la "respuesta" se construye a partir de los datos en memoria y se
  * serializa como lo haría una API HTTP; después se valida con Zod igual que
  * se haría con una respuesta real. El Modo Caos altera esa respuesta.
  */

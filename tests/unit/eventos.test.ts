@@ -153,7 +153,10 @@ describe("casos de uso de eventos", () => {
   it("artistas: lista destacados y obtiene uno con sus eventos", async () => {
     const artista = unArtista({ slug: "dúo", destacado: true });
     const evento = unEvento({ artistas: [{ slug: "dúo", nombre: "Dúo" }] });
-    const repo = new ArtistaRepositoryEnMemoria([artista, unArtista()], [evento]);
+    const repo = new ArtistaRepositoryEnMemoria(
+      [artista, unArtista()],
+      new EventoRepositoryEnMemoria([evento])
+    );
     expect(await new ListarArtistas(repo).ejecutar({ soloDestacados: true })).toHaveLength(1);
     expect(await new ListarArtistas(repo).ejecutar()).toHaveLength(2);
     const r = await new ObtenerArtista(repo).ejecutar("dúo");
@@ -165,7 +168,10 @@ describe("casos de uso de eventos", () => {
     const gateway = new GatewayFalso(
       ok([unEvento({ nombre: "Noche de marimba" }), unEvento({ nombre: "Salsa" })])
     );
-    const artistas = new ArtistaRepositoryEnMemoria([unArtista({ nombre: "Marimba Tumaco Sur" })]);
+    const artistas = new ArtistaRepositoryEnMemoria(
+      [unArtista({ nombre: "Marimba Tumaco Sur" })],
+      new EventoRepositoryEnMemoria()
+    );
     const caso = new BuscarEnFestival(gateway, artistas);
     const r = await caso.ejecutar("MARIMBA");
     expect(r.ok && [r.value.eventos.length, r.value.artistas.length]).toEqual([1, 1]);

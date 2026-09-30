@@ -206,8 +206,6 @@ export const es = {
     emailEnUso: "Ya existe una cuenta con ese correo.",
     passwordDebil: "La contraseña no cumple los requisitos.",
     datosInvalidos: "Revisa los campos marcados.",
-    demasiadosIntentos: (seg: number) =>
-      `Demasiados intentos. Espera ${seg} s antes de reintentar.`,
     emailInvalido: "Escribe un correo válido.",
     nombreInvalido: "Escribe tu nombre (2 a 80 caracteres).",
     requerido: "Este campo es obligatorio.",

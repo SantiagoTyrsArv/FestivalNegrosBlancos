@@ -1,11 +1,17 @@
 import "server-only";
-import { getConexion } from "@/db/client";
 import { crearContenedor, type Contenedor } from "@/contenedor";
 
-let contenedor: Contenedor | undefined;
+declare global {
+  var __cbnContenedor: Contenedor | undefined;
+}
 
-/** Acceso a los casos de uso desde páginas, Route Handlers y Server Actions. */
+/**
+ * Acceso a los casos de uso desde páginas, Route Handlers y Server Actions.
+ * Se guarda en globalThis para que TODO el proceso (páginas, API, acciones y
+ * recargas en caliente de desarrollo) comparta el mismo estado en memoria:
+ * compras, agenda, resultados publicados y Modo Caos. Se reinicia con el servidor.
+ */
 export function casos(): Contenedor {
-  contenedor ??= crearContenedor(getConexion());
-  return contenedor;
+  globalThis.__cbnContenedor ??= crearContenedor();
+  return globalThis.__cbnContenedor;
 }

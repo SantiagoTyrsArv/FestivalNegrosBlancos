@@ -2,7 +2,7 @@ import Link from "next/link";
 import { cerrarSesionAction } from "@/app/login/acciones";
 import { es } from "@/shared/i18n/es";
 import { Button } from "@/shared/ui/components/Button";
-import type { DatosSesion } from "../infrastructure/token-sesion";
+import type { DatosSesion } from "../infrastructure/sesion";
 
 /**
  * Estado de sesión para rutas SSR. No vive en la cabecera global porque leer

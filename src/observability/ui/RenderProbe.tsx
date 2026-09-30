@@ -1,6 +1,5 @@
 import "server-only";
 import { after } from "next/server";
-import { getServerEnv } from "@/shared/config/env";
 import type { Patron } from "../domain/medicion";
 import { msDesde } from "../medir";
 import { reportRender } from "../registrar-render";
@@ -19,7 +18,7 @@ interface RenderProbeProps {
  * Sonda del observatorio: se coloca al final de cada página. Captura el
  * instante de generación (que queda "congelado" en el HTML si la página se
  * cachea) y entrega los datos al RenderBadge del cliente, que informa cada vista.
- * El registro del render se agenda con after(): se escribe en Turso cuando la
+ * El registro del render se agenda con after(): se guarda en memoria cuando la
  * respuesta (o el prerender del build/regeneración ISR) ya terminó, sin sumar
  * la latencia de red al tiempo de respuesta.
  */
@@ -35,7 +34,7 @@ export function RenderProbe({ ruta, patron, inicioRender, revalidar }: RenderPro
       generadoEn={generadoEn.toISOString()}
       tiempoRenderMs={tiempoRenderMs}
       revalidar={revalidar ?? null}
-      visiblePorDefecto={getServerEnv().DEBUG_RENDERING}
+      visiblePorDefecto={process.env["DEBUG_RENDERING"] === "1"}
     />
   );
 }

@@ -1,7 +1,3 @@
-import { eq } from "drizzle-orm";
-import type { Db } from "@/db/connection";
-import { ajustes } from "@/db/schema";
-
 /**
  * Modo Caos: hace fallar a propósito la API upstream simulada
  * (ProgramacionGateway) para observar cómo degrada cada patrón.
@@ -23,24 +19,15 @@ export interface AjustesCaos {
   cambiarModo(modo: ModoCaos): Promise<void>;
 }
 
-const CLAVE = "modo_caos";
-
-/** Persistido en SQLite para que lo compartan todos los renders del proceso y sobreviva reinicios. */
-export class DrizzleAjustesCaos implements AjustesCaos {
-  constructor(private readonly db: Db) {}
+/** Guardado en memoria del proceso: lo comparten todos los renders mientras el servidor viva. */
+export class AjustesCaosEnMemoria implements AjustesCaos {
+  private modo: ModoCaos = "ninguno";
 
   async modoActual(): Promise<ModoCaos> {
-    const [fila] = await this.db.select().from(ajustes).where(eq(ajustes.clave, CLAVE)).limit(1);
-    return fila && esModoCaos(fila.valor) ? fila.valor : "ninguno";
+    return this.modo;
   }
 
   async cambiarModo(modo: ModoCaos): Promise<void> {
-    await this.db
-      .insert(ajustes)
-      .values({ clave: CLAVE, valor: modo })
-      .onConflictDoUpdate({
-        target: ajustes.clave,
-        set: { valor: modo, actualizadoEn: new Date().toISOString() },
-      });
+    this.modo = modo;
   }
 }

@@ -1,11 +1,10 @@
-import bcrypt from "bcryptjs";
-import type { Conexion } from "@/db/connection";
+import { crearCatalogo, type Catalogo } from "@/datos/catalogo";
 import {
   AgregarAAgenda,
   QuitarDeAgenda,
   VerAgenda,
 } from "@/modules/agenda/application/casos-de-uso";
-import { DrizzleAgendaRepository } from "@/modules/agenda/infrastructure/drizzle-agenda-repository";
+import { AgendaRepositoryEnMemoria } from "@/modules/agenda/infrastructure/agenda-repository-en-memoria";
 import {
   ComprarBoletas,
   ConsultarCupos,
@@ -13,15 +12,15 @@ import {
   ObtenerSesion,
 } from "@/modules/boleteria/application/casos-de-uso";
 import {
-  DrizzleBoleteriaRepository,
+  BoleteriaRepositoryEnMemoria,
   GeneradorCodigosAleatorios,
-} from "@/modules/boleteria/infrastructure/drizzle-boleteria-repository";
+} from "@/modules/boleteria/infrastructure/boleteria-repository-en-memoria";
 import {
   ListarComparsas,
   ObtenerComparsa,
   ObtenerEstadoEnVivo,
 } from "@/modules/comparsas/application/casos-de-uso";
-import { DrizzleComparsaRepository } from "@/modules/comparsas/infrastructure/drizzle-comparsa-repository";
+import { ComparsaRepositoryEnMemoria } from "@/modules/comparsas/infrastructure/comparsa-repository-en-memoria";
 import {
   ActualizarEvento,
   BuscarEnFestival,
@@ -31,48 +30,42 @@ import {
   ObtenerArtista,
   ObtenerEvento,
 } from "@/modules/eventos/application/casos-de-uso";
-import {
-  DrizzleArtistaRepository,
-  DrizzleEventoRepository,
-} from "@/modules/eventos/infrastructure/drizzle-repositorios";
 import { ProgramacionGatewaySimulado } from "@/modules/eventos/infrastructure/programacion-gateway-simulado";
+import {
+  ArtistaRepositoryEnMemoria,
+  EventoRepositoryEnMemoria,
+} from "@/modules/eventos/infrastructure/repositorios-en-memoria";
 import {
   ListarResultadosAdmin,
   ListarResultadosPublicados,
   PublicarResultado,
 } from "@/modules/resultados/application/casos-de-uso";
-import { DrizzleResultadoRepository } from "@/modules/resultados/infrastructure/drizzle-resultado-repository";
+import { ResultadoRepositoryEnMemoria } from "@/modules/resultados/infrastructure/resultado-repository-en-memoria";
 import { IniciarSesion, RegistrarUsuario } from "@/modules/usuarios/application/casos-de-uso";
-import {
-  DrizzleUsuarioRepository,
-  ServicioHashBcrypt,
-} from "@/modules/usuarios/infrastructure/drizzle-usuario-repository";
-import { DrizzleAjustesCaos } from "@/observability/caos";
-import { DrizzleMedicionesRepository } from "@/observability/infrastructure/mediciones-repository";
+import { UsuarioRepositoryEnMemoria } from "@/modules/usuarios/infrastructure/usuario-repository-en-memoria";
+import { AjustesCaosEnMemoria } from "@/observability/caos";
+import { MedicionesEnMemoria } from "@/observability/infrastructure/mediciones-en-memoria";
 import { FESTIVAL } from "@/shared/config/constants";
 
 /**
  * Composition root: el ÚNICO lugar que conoce las implementaciones concretas.
- * Los casos de uso reciben interfaces (puertos) por constructor, de modo que
- * los tests pueden sustituir cualquier adaptador por un fake en memoria.
+ * Los casos de uso reciben interfaces (puertos) por constructor; aquí se
+ * conectan con repositorios en memoria alimentados por los datos quemados.
  */
-export function crearContenedor(conexion: Conexion) {
-  const { db, client } = conexion;
-
-  const eventosRepo = new DrizzleEventoRepository(db);
-  const artistasRepo = new DrizzleArtistaRepository(db, eventosRepo);
-  const comparsasRepo = new DrizzleComparsaRepository(db);
-  const boleteriaRepo = new DrizzleBoleteriaRepository(db, client);
-  const resultadosRepo = new DrizzleResultadoRepository(db);
-  const agendaRepo = new DrizzleAgendaRepository(db);
-  const usuariosRepo = new DrizzleUsuarioRepository(db);
-  const hash = new ServicioHashBcrypt();
-  const caos = new DrizzleAjustesCaos(db);
+export function crearContenedor(catalogo: Catalogo = crearCatalogo()) {
+  const eventosRepo = new EventoRepositoryEnMemoria(catalogo.eventos);
+  const artistasRepo = new ArtistaRepositoryEnMemoria(catalogo.artistas, eventosRepo);
+  const comparsasRepo = new ComparsaRepositoryEnMemoria(catalogo.comparsas);
+  const boleteriaRepo = new BoleteriaRepositoryEnMemoria(catalogo.sesiones);
+  const resultadosRepo = new ResultadoRepositoryEnMemoria(catalogo.resultados);
+  const agendaRepo = new AgendaRepositoryEnMemoria();
+  const usuariosRepo = new UsuarioRepositoryEnMemoria(catalogo.usuarios);
+  const caos = new AjustesCaosEnMemoria();
   const gateway = new ProgramacionGatewaySimulado(eventosRepo, caos);
 
   return {
     caos,
-    mediciones: new DrizzleMedicionesRepository(db),
+    mediciones: new MedicionesEnMemoria(),
     eventos: {
       listarProgramacion: new ListarProgramacion(gateway),
       obtener: new ObtenerEvento(eventosRepo),
@@ -106,12 +99,8 @@ export function crearContenedor(conexion: Conexion) {
       quitar: new QuitarDeAgenda(agendaRepo),
     },
     usuarios: {
-      iniciarSesion: new IniciarSesion(
-        usuariosRepo,
-        hash,
-        bcrypt.hashSync("señuelo-no-es-una-clave", 10)
-      ),
-      registrar: new RegistrarUsuario(usuariosRepo, hash),
+      iniciarSesion: new IniciarSesion(usuariosRepo),
+      registrar: new RegistrarUsuario(usuariosRepo),
       obtener: (id: number) => usuariosRepo.obtenerPorId(id),
     },
   };

@@ -1,7 +1,7 @@
 /**
  * Result<T, E>: la capa de aplicación devuelve errores esperados como valores
  * tipados en lugar de lanzar excepciones. Las excepciones quedan reservadas
- * para fallos inesperados (bugs, BD caída), que capturan los error.tsx.
+ * para fallos inesperados (bugs, dependencias caídas), que capturan los error.tsx.
  */
 export type Result<T, E> =
   { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: E };

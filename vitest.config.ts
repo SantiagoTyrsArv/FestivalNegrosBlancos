@@ -9,12 +9,7 @@ export default defineConfig({
     // `// @vitest-environment jsdom` en su cabecera.
     environment: "node",
     setupFiles: ["./src/tests/setup.ts"],
-    include: ["tests/unit/**/*.test.{ts,tsx}", "tests/integration/**/*.test.ts"],
-    env: {
-      TURSO_DATABASE_URL: ":memory:",
-      AUTH_SECRET: "secreto-de-pruebas-con-mas-de-32-caracteres",
-      REVALIDATION_SECRET: "revalidacion-de-pruebas",
-    },
+    include: ["tests/unit/**/*.test.{ts,tsx}"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],

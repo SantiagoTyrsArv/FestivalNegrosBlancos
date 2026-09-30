@@ -9,7 +9,7 @@ import {
   type Medicion,
 } from "@/observability/domain/medicion";
 import { err } from "@/shared/lib/result";
-import { UsuarioRepositoryEnMemoria, hashFalso } from "../fakes";
+import { UsuarioRepositoryEnMemoria } from "../fakes";
 
 describe("usuarios", () => {
   it("normaliza emails y valida la política de contraseñas", () => {
@@ -24,7 +24,7 @@ describe("usuarios", () => {
 
   it("registra usuarios y rechaza emails repetidos y contraseñas débiles", async () => {
     const repo = new UsuarioRepositoryEnMemoria();
-    const caso = new RegistrarUsuario(repo, hashFalso);
+    const caso = new RegistrarUsuario(repo);
     const r = await caso.ejecutar({
       email: "Nuevo@Test.com",
       nombre: " Nuevo ",
@@ -43,11 +43,11 @@ describe("usuarios", () => {
     );
   });
 
-  it("inicia sesión sin revelar si el email existe", async () => {
+  it("inicia sesión solo con credenciales válidas", async () => {
     const repo = new UsuarioRepositoryEnMemoria([
-      { id: 1, email: "ana@test.com", nombre: "Ana", rol: "admin", passwordHash: "hash:Clave123" },
+      { id: 1, email: "ana@test.com", nombre: "Ana", rol: "admin", password: "Clave123" },
     ]);
-    const caso = new IniciarSesion(repo, hashFalso, "hash:señuelo");
+    const caso = new IniciarSesion(repo);
     const bien = await caso.ejecutar("ANA@test.com", "Clave123");
     expect(bien.ok && bien.value).toEqual({
       id: 1,

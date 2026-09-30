@@ -4,7 +4,6 @@ import { z } from "zod";
 import { casos } from "@/composition-root";
 import { MAXIMO_POR_ORDEN } from "@/modules/boleteria/domain/boleteria";
 import { requerirSesion } from "@/modules/usuarios/infrastructure/sesion";
-import { limitador } from "@/shared/http/rate-limit";
 import { es } from "@/shared/i18n/es";
 import type { EstadoFormulario } from "@/shared/ui/estado-formulario";
 
@@ -28,9 +27,6 @@ export async function comprarAction(
     idempotencyKey: formData.get("idempotencyKey"),
   };
   const sesion = await requerirSesion(`/checkout?sesion=${String(entrada.sesionId ?? "")}`);
-
-  const espera = limitador("compra", 10, 60_000).consumir(`usuario:${sesion.id}`);
-  if (espera > 0) return { estado: "error", mensaje: es.auth.demasiadosIntentos(espera) };
 
   const datos = esquema.safeParse(entrada);
   if (!datos.success) {

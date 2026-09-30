@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import { err, ok, type Result } from "@/shared/lib/result";
 import {
   cupoDisponible,
@@ -76,10 +77,7 @@ export class GeneradorCodigosAleatorios implements GeneradorCodigos {
 
   generar(): string {
     const { ALFABETO } = GeneradorCodigosAleatorios;
-    const chars = Array.from(
-      { length: 8 },
-      () => ALFABETO[Math.floor(Math.random() * ALFABETO.length)] ?? "X"
-    );
+    const chars = Array.from({ length: 8 }, () => ALFABETO[randomInt(ALFABETO.length)] ?? "X");
     return `CBN-${chars.slice(0, 4).join("")}-${chars.slice(4).join("")}`;
   }
 }

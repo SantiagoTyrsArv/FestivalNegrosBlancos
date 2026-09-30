@@ -11,7 +11,11 @@ export interface Artista {
 
 /** Texto de búsqueda normalizado: minúsculas y sin tildes. */
 export function normalizarBusqueda(texto: string): string {
-  return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }
 
 export function coincideBusqueda(campos: readonly string[], consulta: string): boolean {

@@ -25,6 +25,8 @@ const csp = [
 const nextConfig: NextConfig = {
   // Modelo de caché clásico (sin cacheComponents): ver docs/adr/0003-estrategia-cache.md
   poweredByHeader: false,
+  // La BD en memoria aplica las migraciones al arrancar: deben viajar con cada función.
+  outputFileTracingIncludes: { "/**": ["./src/db/migrations/**/*"] },
   reactStrictMode: true,
 
   async headers() {

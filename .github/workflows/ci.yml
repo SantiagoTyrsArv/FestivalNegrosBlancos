@@ -10,8 +10,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # BD libSQL efímera por ejecución: el CI nunca escribe en la BD de producción en Turso.
-  TURSO_DATABASE_URL: file:ci.db
   AUTH_SECRET: ci-secreto-de-autenticacion-de-al-menos-32-caracteres
   REVALIDATION_SECRET: ci-secreto-de-revalidacion
   NEXT_TELEMETRY_DISABLED: "1"
@@ -30,7 +28,6 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test:coverage
-      - run: pnpm db:setup
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e

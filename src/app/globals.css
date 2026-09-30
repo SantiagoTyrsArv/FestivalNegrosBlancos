@@ -155,6 +155,9 @@ p {
 
 .skip-link {
   position: absolute;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   left: 1rem;
   top: -4rem;
   z-index: 100;

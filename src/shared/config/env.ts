@@ -16,14 +16,15 @@ const serverEnvSchema = z
       .refine(
         (u) => esRemota(u) || u.startsWith("file:") || u === ":memory:",
         "Debe ser libsql://…, https://…, file:… o :memory:"
-      ),
+      )
+      // Por defecto: BD en memoria con los datos demo del código (sin servicios externos).
+      .default(":memory:"),
     TURSO_AUTH_TOKEN: z.string().optional(),
     AUTH_SECRET: z.string().min(32, "AUTH_SECRET debe tener al menos 32 caracteres"),
     REVALIDATION_SECRET: z
       .string()
       .min(16, "REVALIDATION_SECRET debe tener al menos 16 caracteres"),
     DEBUG_RENDERING: booleanFlag,
-    OBSERVATORIO_PUBLICO: booleanFlag,
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   })
   .refine((e) => !esRemota(e.TURSO_DATABASE_URL) || Boolean(e.TURSO_AUTH_TOKEN), {

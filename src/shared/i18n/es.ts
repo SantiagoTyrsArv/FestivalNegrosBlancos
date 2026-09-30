@@ -1,18 +1,19 @@
 /**
  * Textos de interfaz en español. Centralizados para poder añadir otro idioma
- * creando un diccionario con la misma forma (`typeof es`) y eligiendo el
- * diccionario según el locale.
+ * creando un diccionario con la misma forma (`Diccionario`) y eligiéndolo
+ * según el locale. Las funciones permiten interpolar valores sin concatenar
+ * cadenas en los componentes.
  */
 export const es = {
   sitio: {
     nombre: "Carnaval de Blancos y Negros",
     nombreCorto: "Blancos y Negros",
-    lema: "Seis siglos de juego, color y memoria en las calles de Pasto.",
+    lema: "Juego, color y memoria en las calles de Pasto.",
     descripcion:
-      "Plataforma del Carnaval de Blancos y Negros (edición ficticia de demostración): programación, comparsas, artistas, resultados y boletería.",
+      "Plataforma de una edición ficticia del Carnaval de Blancos y Negros: programación, comparsas, artistas, resultados y boletería.",
     saltarContenido: "Ir al contenido principal",
     avisoFicticio:
-      "Proyecto académico. Festival, fechas, precios y datos son ficticios y creados para demostrar patrones de rendering.",
+      "Proyecto académico. La edición 2027, sus artistas, comparsas, fechas y precios son ficticios y existen para demostrar patrones de rendering.",
   },
   nav: {
     etiqueta: "Navegación principal",
@@ -30,6 +31,7 @@ export const es = {
     faq: "Preguntas frecuentes",
     observatorio: "Observatorio",
     ingresar: "Ingresar",
+    registro: "Crear cuenta",
     salir: "Salir",
     admin: "Admin",
   },
@@ -37,7 +39,6 @@ export const es = {
     explorar: "Explorar",
     proyecto: "El proyecto",
     designSystem: "Design system",
-    derechos: "Hecho con fines educativos.",
   },
   comun: {
     cargando: "Cargando…",
@@ -50,6 +51,357 @@ export const es = {
     noEncontrado: "No encontramos esta página",
     noEncontradoDetalle: "Puede que el enlace esté roto o que el contenido ya no exista.",
     irInicio: "Volver al inicio",
+    patron: "Patrón de rendering",
+  },
+  tiposEvento: {
+    concierto: "Concierto",
+    desfile: "Desfile",
+    ceremonia: "Ceremonia",
+    taller: "Taller",
+  },
+  eventos: {
+    cancelado: "Cancelado",
+    escenario: "Escenario",
+    artistas: "Artistas",
+    comprar: "Ver boletas",
+    horario: (inicio: string, fin: string) => `${inicio} – ${fin}`,
+  },
+  inicio: {
+    antetitulo: "Pasto · 2 al 6 de enero de 2027",
+    titulo: "El carnaval donde la ciudad juega a ser otra",
+    entradilla:
+      "Cinco días de desfiles, conciertos y talleres. Un día todos somos negros, al siguiente todos somos blancos: nadie es más que nadie.",
+    ctaProgramacion: "Ver programación",
+    ctaBoletas: "Comprar boletas",
+    diaNegros: "Día de Negros",
+    diaNegrosTexto: "5 de enero · juego con cosmético negro en señal de igualdad.",
+    diaBlancos: "Día de Blancos",
+    diaBlancosTexto: "6 de enero · talco, serpentinas y el Gran Desfile Magno.",
+    destacados: "Próximos en tarima",
+    destacadosNota:
+      "Esta lista se generó al construir el sitio (SSG): no cambia hasta el próximo despliegue.",
+    comoEsta: "Cómo está construida esta web",
+    comoEstaTexto:
+      "Cada sección usa el patrón de rendering que mejor encaja con sus datos. Abre cualquier página con ?debug=1 para ver la insignia del patrón y su hora de generación.",
+    patrones: {
+      SSG: {
+        titulo: "SSG",
+        texto: "Historia, recorrido, FAQ y comparsas: contenido que solo cambia al desplegar.",
+      },
+      ISR: {
+        titulo: "ISR",
+        texto:
+          "Programación, artistas y resultados: estáticos, pero se regeneran solos o a demanda.",
+      },
+      SSR: {
+        titulo: "SSR",
+        texto:
+          "Boletas, checkout, login y búsqueda: dependen de la petición, la sesión o el cupo real.",
+      },
+      CSR: {
+        titulo: "CSR",
+        texto: "En vivo y Mi agenda: interactivos, sin SEO, se actualizan en el navegador.",
+      },
+    },
+    verObservatorio: "Abrir el observatorio de rendering",
+  },
+  historia: {
+    titulo: "Historia",
+    descripcion: "De juego callejero a patrimonio: el origen de los días de negros y blancos.",
+    parrafos: [
+      "El Carnaval de Negros y Blancos de San Juan de Pasto fue declarado Patrimonio Cultural Inmaterial de la Humanidad por la UNESCO en 2009. Esta plataforma recrea una edición ficticia inspirada en él.",
+      "El 5 de enero, el Día de Negros, la gente se pinta el rostro de negro y juega en las calles. El 6 de enero, el Día de Blancos, el talco y las serpentinas cubren la ciudad durante el Gran Desfile Magno. El mensaje es el mismo en ambos días: durante el carnaval nadie es más que nadie.",
+      "Antes de esos días llegan el Carnavalito, protagonizado por niñas y niños, y el Canto a la Tierra, donde los colectivos coreográficos danzan por la senda del carnaval. Artesanos, músicos y comparsas trabajan todo el año en carrozas, máscaras y coreografías.",
+    ],
+    patronNota:
+      "Esta página es SSG: su HTML se generó una sola vez al construir el sitio y se sirve igual a todo el mundo.",
+  },
+  recorrido: {
+    titulo: "Recorrido del desfile",
+    descripcion:
+      "La Senda del Carnaval, de la salida en el Parque del Carnavalito a la llegada al estadio.",
+    leyenda: "Trazado ilustrativo, no cartográfico.",
+    hitos: "Puntos del recorrido",
+    mapaEtiqueta: "Mapa esquemático del recorrido del desfile con sus puntos principales",
+  },
+  faq: {
+    titulo: "Preguntas frecuentes",
+    descripcion: "Lo que necesitas saber antes de venir al carnaval.",
+    preguntas: [
+      [
+        "¿Las boletas son nominales?",
+        "Sí. Cada compra queda asociada a tu cuenta y recibe un código único (por ejemplo, CBN-7K3Q-9XPA).",
+      ],
+      [
+        "¿Cuántas boletas puedo comprar?",
+        "Hasta 6 por orden. Si una localidad se agota, el sistema no permite venderla por encima de su cupo.",
+      ],
+      [
+        "¿Puedo jugar con talco y cosmético?",
+        "Sí, en las zonas de juego y respetando a quien no quiera participar. Usa productos certificados.",
+      ],
+      [
+        "¿Qué pasa si llueve?",
+        "Los desfiles se mantienen salvo alerta oficial. Cualquier cambio se publica en la programación, que se actualiza sola.",
+      ],
+      [
+        "¿Por qué esta página no cambia nunca?",
+        "Porque es SSG: se generó al construir el sitio. Para cambiarla hay que volver a desplegar.",
+      ],
+    ],
+  },
+  comparsas: {
+    titulo: "Comparsas",
+    descripcion:
+      "Los colectivos que dan vida al desfile. Cada ficha se generó al construir el sitio (SSG).",
+    fundada: (anio: number) => `Fundada en ${anio}`,
+    trayectoria: (anios: number) => `${anios} años de trayectoria`,
+    director: "Dirección",
+    integrantes: "Integrantes",
+    motivo: "Motivo 2027",
+    volver: "Todas las comparsas",
+    enVivo: "Seguir su posición en vivo",
+  },
+  programacion: {
+    titulo: "Programación",
+    descripcion:
+      "Todos los eventos del carnaval por día. Se regenera como máximo cada 60 segundos (ISR).",
+    tituloDia: (dia: string) => `Programación del ${dia}`,
+    dias: "Días del festival",
+    vacio: "No hay eventos este día.",
+    todos: "Todos los días",
+    generada: "Página generada",
+  },
+  artistas: {
+    antetitulo: "Artista",
+    origen: "Origen",
+    genero: "Género",
+    presentaciones: "Presentaciones",
+    sinPresentaciones: "Este artista no tiene presentaciones programadas.",
+  },
+  resultados: {
+    titulo: "Resultados del concurso",
+    descripcion:
+      "Puntajes oficiales publicados por el jurado. Se regeneran cada 30 segundos o al instante cuando el jurado publica (ISR + on-demand).",
+    puesto: "Puesto",
+    comparsa: "Comparsa",
+    puntaje: "Puntaje",
+    vacio: "Aún no hay resultados publicados.",
+    publicado: "Publicado",
+  },
+  auth: {
+    loginTitulo: "Ingresar",
+    loginDescripcion: "Accede para comprar boletas y guardar tu agenda.",
+    registroTitulo: "Crear cuenta",
+    registroDescripcion: "Regístrate para comprar boletas y armar tu agenda del carnaval.",
+    email: "Correo electrónico",
+    password: "Contraseña",
+    passwordAyuda: "Mínimo 8 caracteres, con al menos una letra y un número.",
+    nombre: "Nombre",
+    entrar: "Entrar",
+    registrarme: "Crear cuenta",
+    sinCuenta: "¿No tienes cuenta?",
+    conCuenta: "¿Ya tienes cuenta?",
+    credencialesInvalidas: "Correo o contraseña incorrectos.",
+    emailEnUso: "Ya existe una cuenta con ese correo.",
+    passwordDebil: "La contraseña no cumple los requisitos.",
+    datosInvalidos: "Revisa los campos marcados.",
+    demasiadosIntentos: (seg: number) =>
+      `Demasiados intentos. Espera ${seg} s antes de reintentar.`,
+    emailInvalido: "Escribe un correo válido.",
+    nombreInvalido: "Escribe tu nombre (2 a 80 caracteres).",
+    requerido: "Este campo es obligatorio.",
+    cuentasDemo: "Cuentas de demostración",
+    hola: (nombre: string) => `Hola, ${nombre}`,
+    patronNota: "SSR: esta página se renderiza en cada petición porque depende de tu sesión.",
+  },
+  admin: {
+    titulo: "Panel de administración",
+    descripcion:
+      "Edita un evento o publica un resultado: la página ISR afectada se revalida al instante con revalidateTag, sin volver a desplegar.",
+    eventos: "Eventos",
+    resultados: "Resultados pendientes",
+    sinPendientes: "No hay resultados pendientes de publicar.",
+    nombre: "Nombre",
+    descripcionCampo: "Descripción",
+    cancelado: "Evento cancelado",
+    guardar: "Guardar y revalidar",
+    publicar: "Publicar y revalidar",
+    guardado: (tags: string) => `Guardado. Etiquetas revalidadas: ${tags}.`,
+    publicado: "Resultado publicado. /resultados se regenerará en la próxima visita.",
+    verPagina: "Ver página afectada",
+    errorNombre: "El nombre debe tener entre 3 y 120 caracteres.",
+    errorDescripcion: "La descripción es obligatoria (máximo 600 caracteres).",
+    noEncontrado: "El elemento ya no existe.",
+    yaPublicado: "Ese resultado ya estaba publicado.",
+    editar: "Editar",
+  },
+  boletas: {
+    titulo: "Boletas",
+    descripcion:
+      "Cupos reales en este instante: la página se renderiza en cada petición (SSR), sin caché.",
+    disponibles: (n: number) => `${n.toLocaleString("es-CO")} disponibles`,
+    disponibilidad: { disponible: "Disponible", ultimas: "Últimas boletas", agotado: "Agotado" },
+    comprar: "Comprar",
+    verSesiones: "Ver localidades",
+    sinSesiones: "Este evento es de acceso libre: no requiere boleta.",
+    localidades: "Localidades",
+    cupoEnVivo: "Cupo en tiempo real",
+    cargandoCupo: "Consultando el cupo en tiempo real…",
+    shellNota:
+      "Híbrido: los datos del evento salen de caché (se muestran al instante) y el cupo llega por streaming, calculado en esta petición.",
+    consultadoEn: (hora: string) => `Consultado a las ${hora}`,
+    misBoletas: "Mis boletas",
+    precio: "Precio",
+    gratis: "Gratis",
+  },
+  checkout: {
+    titulo: "Checkout",
+    descripcion: "Confirma tu compra. El cupo se verifica de forma atómica al pagar.",
+    cantidad: "Cantidad de boletas",
+    cantidadAyuda: (max: number) => `Máximo ${max} por orden.`,
+    total: "Total",
+    confirmar: "Confirmar compra",
+    exito: "¡Compra confirmada!",
+    codigo: "Código de tu boleta",
+    repetida: "Esta compra ya se había registrado (mismo intento): no se cobró dos veces.",
+    otraCompra: "Comprar otra",
+    sinSesion: "Elige primero una localidad desde la página de boletas.",
+    errores: {
+      CANTIDAD_INVALIDA: (max: number) => `La cantidad debe estar entre 1 y ${max}.`,
+      CUPO_INSUFICIENTE: (n: number) =>
+        n === 0
+          ? "Se agotaron las boletas de esta localidad."
+          : `Solo quedan ${n} boletas en esta localidad.`,
+      SESION_NO_ENCONTRADA: "Esa localidad ya no existe.",
+    },
+  },
+  buscar: {
+    titulo: "Buscar",
+    descripcion:
+      "Busca eventos y artistas. Los resultados se calculan en el servidor en cada petición (SSR).",
+    etiqueta: "¿Qué quieres buscar?",
+    boton: "Buscar",
+    eventos: "Eventos",
+    artistas: "Artistas",
+    sinResultados: (q: string) => `No encontramos resultados para «${q}».`,
+    consultaCorta: "Escribe al menos 2 caracteres.",
+    resultadosPara: (q: string) => `Resultados para «${q}»`,
+  },
+  enVivo: {
+    titulo: "Desfile en vivo",
+    descripcion:
+      "Posición de las comparsas actualizada cada 5 segundos desde el navegador (CSR). Sin SEO: el contenido se obtiene tras cargar la página.",
+    simulacion:
+      "Simulación: las posiciones se calculan a partir del reloj, no provienen de GPS reales.",
+    filtro: "Filtrar comparsas",
+    estado: "Estado",
+    todos: "Todos",
+    estados: { "en-espera": "En espera", desfilando: "Desfilando", finalizado: "Finalizado" },
+    cargando: "Conectando con el desfile…",
+    error: "No pudimos actualizar el desfile",
+    errorDetalle:
+      "La fuente oficial no responde. Reintentaremos automáticamente con espera creciente.",
+    reintentando: (n: number) => `Reintento automático #${n} en curso…`,
+    reconectando: "Reconectando…",
+    vacio: "Ninguna comparsa coincide con el filtro.",
+    actualizado: (hora: string) => `Actualizado a las ${hora}`,
+    proximo: "Próximo en la programación",
+    mapa: "Mapa del recorrido con la posición de las comparsas",
+    enHito: (hito: string) => `cerca de ${hito}`,
+  },
+  agenda: {
+    titulo: "Mi agenda",
+    descripcion:
+      "Arma tu plan del carnaval. Los cambios se ven al instante (actualización optimista) y se guardan en el servidor; si fallan, se deshacen.",
+    requiereSesion: "Inicia sesión para guardar tu agenda.",
+    vacia: "Tu agenda está vacía. Agrega eventos desde la lista.",
+    agregar: "Agregar",
+    quitar: "Quitar",
+    enAgenda: "En tu agenda",
+    disponibles: "Eventos del festival",
+    conflicto: "Se cruza en horario con otro evento de tu agenda",
+    errorGuardar: "No se pudo guardar el cambio. Lo deshicimos.",
+    cargando: "Cargando tu agenda…",
+    errorCarga: "No pudimos cargar tu agenda.",
+  },
+  observatorio: {
+    titulo: "Observatorio de rendering",
+    descripcion:
+      "Qué patrón declara cada ruta y cómo se comporta de verdad, medido en vivo con las visitas reales al sitio.",
+    comoFunciona: "Cómo se mide",
+    explicacion: [
+      "Cada página incluye una sonda que congela en el HTML la hora en que el servidor la generó. Al abrirse en un navegador, envía una «vista».",
+      "Si muchas vistas comparten la misma hora de generación, el HTML salió de caché (SSG/ISR). Si cada vista trae una hora nueva, se renderizó por petición (SSR). Si el contenido no estaba en el HTML inicial, lo pintó el navegador (CSR).",
+      "HIT/MISS/STALE se infiere comparando la edad del HTML con su ventana de revalidación: es una estimación, no la cabecera real de la CDN. En Vercel cada instancia guarda sus propias mediciones en memoria.",
+    ],
+    ruta: "Ruta",
+    declarado: "Declarado",
+    observado: "Observado",
+    coincide: "¿Coincide?",
+    vistas: "Vistas",
+    renders: "Renders",
+    generado: "Última generación",
+    estado: "Estado caché",
+    tiempo: "Render medio",
+    enHtml: "En HTML inicial",
+    si: "Sí",
+    no: "No",
+    sinDatos: "Aún no hay mediciones. Navega por el sitio y vuelve aquí.",
+    historial: "Historial reciente",
+    historialDesc:
+      "Últimas mediciones (izquierda = más antigua). Altura = tiempo de render; color = estado de caché.",
+    actualizado: (hora: string) => `Actualizado a las ${hora} · se refresca cada 5 s`,
+    cargando: "Cargando métricas…",
+    error: "No se pudieron cargar las métricas.",
+    caosTitulo: "Modo Caos",
+    caosDesc:
+      "Hace fallar la API upstream de programación. SSG/ISR siguen sirviendo la última versión buena, SSR (/buscar) muestra un error controlado y CSR (/en-vivo) reintenta con backoff.",
+    caosActual: (modo: string) => `Modo actual: ${modo}`,
+    caosSoloAdmin: "Solo el admin puede cambiarlo (la cuenta demo está en /login).",
+    modos: {
+      ninguno: "Ninguno",
+      error: "Error 503",
+      lento: "Lento (4 s)",
+      invalido: "Respuesta inválida",
+    },
+    aplicar: "Aplicar",
+    costos: "Abrir el simulador de costos",
+  },
+  costos: {
+    titulo: "Simulador de costos",
+    descripcion:
+      "Compara servir todo con SSR frente a la arquitectura híbrida de este proyecto. Todos los precios son ESTIMACIONES editables, no tarifas reales.",
+    supuestos: "Supuestos (editables)",
+    visitas: "Visitas al mes",
+    mezcla: "Mezcla de tráfico (%)",
+    ssg: "SSG",
+    isr: "ISR",
+    ssr: "SSR",
+    csr: "CSR",
+    costoInvocaciones: "USD por millón de invocaciones (estimado)",
+    costoGB: "USD por GB desde función (estimado)",
+    costoGBCdn: "USD por GB desde CDN (estimado)",
+    htmlKB: "Peso del HTML (KB)",
+    jsonKB: "Peso de una respuesta JSON (KB)",
+    llamadas: "Llamadas a la API por vista CSR",
+    rutasIsr: "Rutas ISR distintas",
+    revalidar: "Revalidación ISR media (s)",
+    todoSsr: "(a) Todo SSR",
+    hibrido: "(b) Híbrido (este proyecto)",
+    invocaciones: "Invocaciones",
+    transferencia: "Transferencia",
+    total: "Total mensual estimado",
+    ahorro: (pct: string) => `Ahorro estimado: ${pct} %`,
+    sobrecosto: (pct: string) =>
+      `El híbrido cuesta ${pct} % más con estos supuestos (revisa el polling CSR).`,
+    errorMezcla: "La mezcla de tráfico debe sumar 100 %.",
+    errorNegativo: "Ningún valor puede ser negativo.",
+  },
+  errores: {
+    upstream: "La programación no está disponible",
+    upstreamDetalle:
+      "La fuente oficial de la programación no responde en este momento. Estamos mostrando lo que tenemos; intenta de nuevo en unos segundos.",
   },
 } as const;
 
